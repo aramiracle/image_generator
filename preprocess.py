@@ -1,5 +1,4 @@
 import os
-import torch
 from PIL import Image
 from torchvision import transforms
 from torchvision.utils import save_image
@@ -13,7 +12,7 @@ resized_dir = "data/resized"
 os.makedirs(resized_dir, exist_ok=True)
 
 # Define the desired image size
-desired_size = (64, 64)
+desired_size = (32, 32)
 
 # Define a transformation to resize the images
 transform = transforms.Compose([

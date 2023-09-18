@@ -9,7 +9,7 @@ from torchvision.utils import save_image
 from torchvision import transforms
 from torch.utils.data import DataLoader
 from tqdm import tqdm
-from torchmetrics.image import StructuralSimilarityIndexMeasure, VisualInformationFidelity, PeakSignalNoiseRatio
+from torchmetrics.image import StructuralSimilarityIndexMeasure, PeakSignalNoiseRatio
 from model import *
 from data_loader import ImageDataset
 
@@ -41,8 +41,8 @@ def PSNR_SSIM_LNL1_loss(prediction, target):
 train_root_dir = 'data/resized'
 
 # Define hyperparameters
-batch_size = 50
-learning_rate = 0.0005
+batch_size = 64
+learning_rate = 0.001
 epochs = 50
 # Initialize the generator and discriminator
 generator = EfficientNetGenerator()
@@ -59,7 +59,6 @@ train_dataset = ImageDataset(train_root_dir, transform=transform, train=True)
 
 train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
 
-vif_metric = VisualInformationFidelity()
 ssim_metric = StructuralSimilarityIndexMeasure(data_range=1)
 psnr_metric = PeakSignalNoiseRatio()
 
@@ -114,17 +113,13 @@ best_ssim = 0
 # Calculate images feature with pretrained models
 model_1 = models.efficientnet_v2_s(weights='EfficientNet_V2_S_Weights.DEFAULT')
 model_2 = models.resnet50(weights='ResNet50_Weights.DEFAULT')
-model_3 = models.convnext_tiny(weights='ConvNeXt_Tiny_Weights.DEFAULT')
-model_4 = models.maxvit_t(weights='MaxVit_T_Weights.DEFAULT')
-model_5 = models.regnet_y_3_2gf(weights='RegNet_Y_3_2GF_Weights.DEFAULT')
-model_6 = models.swin_v2_t(weights='Swin_V2_T_Weights.DEFAULT')
-
+model_3 = models.regnet_y_3_2gf(weights='RegNet_Y_3_2GF_Weights.DEFAULT')
+model_4 = models.swin_v2_t(weights='Swin_V2_T_Weights.DEFAULT')
 
 # Training loop
 for epoch in range(epoch, epochs):
     running_psnr = 0.0
     running_ssim = 0.0
-    running_vif = 0.0
     running_lnl1 = 0.0
 
     # Wrap train_loader with tqdm for progress bar
@@ -132,8 +127,12 @@ for epoch in range(epoch, epochs):
 
         current_batch_size = real_images.shape[0]
         
-        features = model_1(real_images)
-        print(features.shape)
+        f1 = model_1(real_images)
+        f2 = model_2(real_images)
+        f3 = model_3(real_images)
+        f4 = model_4(real_images)
+
+        features = torch.cat((f1, f2, f3, f4), dim=1).unsqueeze(2).unsqueeze(3)
 
         # Train Discriminator
         optimizer_D.zero_grad()
@@ -141,7 +140,7 @@ for epoch in range(epoch, epochs):
         # Generate fake images from the generator
         fake_images = generator(features)
         if not((batch_idx + 1)%4):
-            save_image(fake_images, f'{generated_images_dir}/fake_image_epoch{epoch + 1:04d}_batch{batch_idx + 1:02d}.png')
+            save_image(torch.cat((fake_images, real_images), dim=0), f'{generated_images_dir}/fake_image_epoch{epoch + 1:04d}_batch{batch_idx + 1:02d}.png')
 
         # Calculate PSNR for this batch and accumulate
         psnr = psnr_metric(fake_images, real_images)
@@ -150,10 +149,6 @@ for epoch in range(epoch, epochs):
         # Calculate SSIM for this batch and accumulate
         ssim_value = ssim_metric(fake_images, real_images)
         running_ssim += ssim_value
-        
-        # Calculate VIF for this batch and accumulate
-        vif_value = vif_metric(fake_images, real_images)
-        running_vif += vif_value
 
         # Calculate LNL1 for this batch and accumulate
         lnl1_value = lnl1_metric(fake_images, real_images)
@@ -191,11 +186,10 @@ for epoch in range(epoch, epochs):
     
     average_psnr = running_psnr / len(train_loader)
     average_ssim = running_ssim / len(train_loader)
-    average_vif = running_vif / len(train_loader)
     average_lnl1 = running_lnl1 / len(train_loader)
 
     print(f"Epoch [{epoch + 1}/{epochs}] Loss D: {loss_discriminator.item():.4f} Loss G: {loss_generator.item():.4f}")
-    print(f'Epoch [{epoch + 1}/{epochs}] Metrics: PSNR: {average_psnr:.4f} SSIM: {average_ssim:.4f} VIF: {average_vif:.4f} LNL1: {average_lnl1:.4f}')
+    print(f'Epoch [{epoch + 1}/{epochs}] Metrics: PSNR: {average_psnr:.4f} SSIM: {average_ssim:.4f} LNL1: {average_lnl1:.4f}')
 
     # Check the condition and save models if met
     if not((epoch + 1) % 5):
@@ -238,7 +232,7 @@ generator.eval()
 with torch.no_grad():
     for i in generated_images_num:
         
-        random_feature = torch.rand((1536, 1, 1))
+        random_feature = torch.rand((4000, 1, 1))
         generated_image = generator(random_feature)
 
         # You can save or visualize the generated images as needed
