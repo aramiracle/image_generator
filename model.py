@@ -3,9 +3,9 @@ import torchvision.models as models
 
 
 # Define the Generator network
-class EfficientNetGenerator(nn.Module):
+class PretrainGenerator(nn.Module):
     def __init__(self):
-        super(EfficientNetGenerator, self).__init__()
+        super(PretrainGenerator, self).__init__()
 
         # Load the pre-trained ResNet-50 model
         efficientnet = models.efficientnet_b3(weights='EfficientNet_B3_Weights.DEFAULT')
@@ -14,7 +14,7 @@ class EfficientNetGenerator(nn.Module):
         self.efficientnet_features = nn.Sequential(*list(efficientnet.children())[:-1])
         
         # Define additional layers for upsampling to reach 50x50 resolution
-        self.fc = nn.Linear(3000, 128)
+        self.fc = nn.Linear(6000, 128)
         
         self.deconv1 = nn.Sequential(
             nn.ConvTranspose2d(128, 64, kernel_size=4, stride=2, padding=1)
@@ -74,3 +74,15 @@ class Discriminator(nn.Module):
 
     def forward(self, x):
         return self.model(x)
+
+class FeatureOpimizer(nn.Module):
+    def __init__(self):
+        super(FeatureOpimizer, self).__init__()
+
+        self.fc = nn.Sequential(
+            nn.Linear(6000, 1000),
+            nn.Linear(1000, 6000)
+        )
+
+    def forward(self, x):
+        return self.fc(x)
