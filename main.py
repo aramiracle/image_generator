@@ -42,8 +42,8 @@ train_root_dir = 'data/resized'
 
 # Define hyperparameters
 batch_size = 64
-learning_rate = 0.001
-epochs = 50
+learning_rate = 0.003
+epochs = 200
 # Initialize the generator and discriminator
 generator = EfficientNetGenerator()
 discriminator = Discriminator()
@@ -111,10 +111,9 @@ else:
 best_ssim = 0
 
 # Calculate images feature with pretrained models
-model_1 = models.efficientnet_v2_s(weights='EfficientNet_V2_S_Weights.DEFAULT')
-model_2 = models.resnet50(weights='ResNet50_Weights.DEFAULT')
-model_3 = models.regnet_y_3_2gf(weights='RegNet_Y_3_2GF_Weights.DEFAULT')
-model_4 = models.swin_v2_t(weights='Swin_V2_T_Weights.DEFAULT')
+model_1 = models.efficientnet_b2(weights='EfficientNet_B2_Weights.DEFAULT')
+model_2 = models.shufflenet_v2_x2_0(weights='ShuffleNet_V2_X2_0_Weights.DEFAULT')
+model_3 = models.regnet_y_1_6gf(weights='RegNet_Y_1_6GF_Weights.DEFAULT')
 
 # Training loop
 for epoch in range(epoch, epochs):
@@ -130,9 +129,8 @@ for epoch in range(epoch, epochs):
         f1 = model_1(real_images)
         f2 = model_2(real_images)
         f3 = model_3(real_images)
-        f4 = model_4(real_images)
 
-        features = torch.cat((f1, f2, f3, f4), dim=1).unsqueeze(2).unsqueeze(3)
+        features = torch.cat((f1, f2, f3), dim=1)
 
         # Train Discriminator
         optimizer_D.zero_grad()
@@ -230,12 +228,12 @@ generated_images_num = 100
 
 generator.eval()
 with torch.no_grad():
-    for i in generated_images_num:
+    for i in range(generated_images_num):
         
         random_feature = torch.rand((4000, 1, 1))
         generated_image = generator(random_feature)
 
         # You can save or visualize the generated images as needed
-        fake_image = transforms.ToPILImage()(fake_image.squeeze().cpu())
-        fake_image.save(os.path.join(gan_images_dir, f"generated_{batch_idx + 1:04d}.png"))
+        generated_image = transforms.ToPILImage()(generated_image.squeeze().cpu())
+        generated_image.save(os.path.join(gan_images_dir, f"generated_{i + 1:04d}.png"))
 

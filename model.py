@@ -14,9 +14,7 @@ class EfficientNetGenerator(nn.Module):
         self.efficientnet_features = nn.Sequential(*list(efficientnet.children())[:-1])
         
         # Define additional layers for upsampling to reach 50x50 resolution
-        self.conv = nn.Sequential(
-            nn.Conv2d(4000, 128, kernel_size=3, stride=1, padding=1)
-        )
+        self.fc = nn.Linear(3000, 128)
         
         self.deconv1 = nn.Sequential(
             nn.ConvTranspose2d(128, 64, kernel_size=4, stride=2, padding=1)
@@ -44,7 +42,7 @@ class EfficientNetGenerator(nn.Module):
 
         
     def forward(self, x):
-        x0 = self.conv(x) #128x1x1
+        x0 = self.fc(x).unsqueeze(2).unsqueeze(3) #128x1x1
         x1 = self.deconv1(x0) #64x2x2
         x2 = self.deconv2(x1) #32x4x4
         x3 = self.deconv3(x2) #16x8x8
