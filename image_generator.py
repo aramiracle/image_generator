@@ -23,9 +23,10 @@ generator.load_state_dict(checkpoint['generator_state_dict'])
 generated_images_num = 100
 num_epochs = 1000
 
-for i in range(generated_images_num):
+generator.eval()
+
+for i in tqdm(range(generated_images_num)):
     for epoch in range(num_epochs):
-        generator.eval()
         model.train()
         optimizer.zero_grad()
 
@@ -40,10 +41,11 @@ for i in range(generated_images_num):
     print(f'Optimizing for {i+1}-th random feature is finished.')
 
     model.eval()
-    generated_image_tensor = generator(model(random_feature))
+    with torch.no_grad():
+        generated_image_tensor = generator(model(random_feature))
 
-    generated_image = transforms.ToPILImage()(generated_image_tensor.squeeze().cpu().detach())
-    generated_image.save(f'{gan_images_dir}/generated_{i+1:04d}.png')
+        generated_image = transforms.ToPILImage()(generated_image_tensor.squeeze().cpu().detach())
+        generated_image.save(f'{gan_images_dir}/generated_{i+1:04d}.png')
 
 
 

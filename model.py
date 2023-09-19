@@ -9,7 +9,7 @@ class PretrainGenerator(nn.Module):
         
         # Define additional layers for upsampling to reach 50x50 resolution
         self.fc = nn.Sequential(
-            nn.Linear(6000, 1000),
+            nn.Linear(7000, 1000),
             nn.Linear(1000, 128)
         )
         
@@ -76,8 +76,10 @@ class FeatureOpimizer(nn.Module):
         super(FeatureOpimizer, self).__init__()
 
         self.fc = nn.Sequential(
-            nn.Linear(6000, 1000),
-            nn.Linear(1000, 6000)
+            nn.Linear(7000, 1000),
+            nn.Linear(1000, 200),
+            nn.Linear(200,1000),
+            nn.Linear(1000, 7000)
         )
 
     def forward(self, x):
