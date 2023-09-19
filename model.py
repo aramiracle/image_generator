@@ -80,9 +80,9 @@ class FeatureOpimizer(nn.Module):
         self.fc = nn.Sequential(
             nn.Linear(10, 100),
             nn.LeakyReLU(0.2),
-            nn.Linear(100, 500),
+            nn.Linear(100, 1000),
             nn.LeakyReLU(0.2),
-            nn.Linear(200,1000),
+            nn.Linear(1000,7000),
             nn.Sigmoid()
         )
 

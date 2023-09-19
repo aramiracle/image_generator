@@ -16,12 +16,12 @@ optimizer = optim.Adam(model.parameters(), lr=0.001)
 gan_images_dir = 'results/gan'
 os.makedirs(gan_images_dir, exist_ok=True)
 
-best_checkpoint_path = 'saved_models/gan/best_gan_checkpoint.pth'
+best_checkpoint_path = 'saved_models/phase1/best_gan_checkpoint.pth'
 checkpoint = torch.load(best_checkpoint_path)
 generator.load_state_dict(checkpoint['generator_state_dict'])
 
 generated_images_num = 100
-num_epochs = 1000
+num_epochs = 300
 
 generator.eval()
 
@@ -31,7 +31,7 @@ for i in tqdm(range(generated_images_num)):
         model.train()
         optimizer.zero_grad()
 
-        random_feature = torch.rand(10).unsqueeze(-1)
+        random_feature = torch.rand(10).unsqueeze(0)
         generated_feature = model(random_feature)
         generated_image_tensor = generator(generated_feature)
         loss = brisque(generated_image_tensor)
@@ -40,7 +40,7 @@ for i in tqdm(range(generated_images_num)):
             best_loss = loss
         loss.backward()
         optimizer.step()
-        print(f'Epoch {epoch+1}/{num_epochs}, Loss: {loss}')
+        print(f'Image {i+1} Epoch {epoch+1}/{num_epochs}, Loss: {loss:.4f}')
 
     print(f'Optimizing for {i+1}-th random feature is finished.')
 
