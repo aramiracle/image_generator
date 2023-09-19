@@ -31,7 +31,7 @@ for i in tqdm(range(generated_images_num)):
         model.train()
         optimizer.zero_grad()
 
-        random_feature = torch.rand(1, 3000)
+        random_feature = torch.rand(10).unsqueeze(-1)
         generated_feature = model(random_feature)
         generated_image_tensor = generator(generated_feature)
         loss = brisque(generated_image_tensor)
