@@ -55,7 +55,7 @@ checkpoint_files_phase2 = [f for f in os.listdir(checkpoint_dir_phase2) if re.ma
 
 if checkpoint_files_phase2:
     # Extract and sort the epoch numbers
-    epoch_numbers = [int(re.search(r'gan_checkpoint_epoch(\d+)\.pth', f).group(1)) for f in checkpoint_files]
+    epoch_numbers = [int(re.search(r'gan_checkpoint_epoch(\d+)\.pth', f).group(1)) for f in checkpoint_files_phase2]
     epoch_numbers.sort()
     
     # Load the latest checkpoint
