@@ -4,7 +4,6 @@ from model import *
 from piq import brisque
 from torchvision import transforms
 import torch.optim as optim
-from tqdm import tqdm
 
 
 generator = PretrainGenerator()
@@ -25,7 +24,7 @@ num_epochs = 300
 
 generator.eval()
 
-for i in tqdm(range(generated_images_num)):
+for i in range(generated_images_num):
     best_loss = float('inf')
     for epoch in range(num_epochs):
         model.train()
