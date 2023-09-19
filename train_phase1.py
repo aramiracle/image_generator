@@ -17,7 +17,7 @@ train_root_dir = 'data/resized'
 
 # Define hyperparameters
 batch_size = 64
-learning_rate = 0.003
+learning_rate = 3e-3
 epochs = 100
 
 generator = PretrainGenerator()
