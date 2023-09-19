@@ -119,6 +119,14 @@ model_5 = models.mnasnet1_3(weights='MNASNet1_3_Weights.DEFAULT')
 model_6 = models.mobilenet_v3_large(weights='MobileNet_V3_Large_Weights.DEFAULT')
 model_7 = models.regnet_x_1_6gf(weights='RegNet_X_1_6GF_Weights.DEFAULT')
 
+model_1.eval()
+model_2.eval()
+model_3.eval()
+model_4.eval()
+model_5.eval()
+model_6.eval()
+model_7.eval()
+
 # Training loop
 for epoch in range(epoch, epochs):
     running_psnr = 0.0

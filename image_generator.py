@@ -26,6 +26,7 @@ num_epochs = 1000
 generator.eval()
 
 for i in tqdm(range(generated_images_num)):
+    best_loss = float('inf')
     for epoch in range(num_epochs):
         model.train()
         optimizer.zero_grad()
@@ -34,18 +35,17 @@ for i in tqdm(range(generated_images_num)):
         generated_feature = model(random_feature)
         generated_image_tensor = generator(generated_feature)
         loss = brisque(generated_image_tensor)
+        if loss < best_loss:
+            best_generated_image = generated_image_tensor
+            best_loss = loss
         loss.backward()
         optimizer.step()
         print(f'Epoch {epoch+1}/{num_epochs}, Loss: {loss}')
 
     print(f'Optimizing for {i+1}-th random feature is finished.')
 
-    model.eval()
-    with torch.no_grad():
-        generated_image_tensor = generator(model(random_feature))
-
-        generated_image = transforms.ToPILImage()(generated_image_tensor.squeeze().cpu().detach())
-        generated_image.save(f'{gan_images_dir}/generated_{i+1:04d}.png')
+    generated_image = transforms.ToPILImage()(best_generated_image.squeeze().cpu().detach())
+    generated_image.save(f'{gan_images_dir}/generated_{i+1:04d}.png')
 
 
 
