@@ -10,26 +10,28 @@ class PretrainGenerator(nn.Module):
         # Define additional layers for upsampling to reach 50x50 resolution
         self.fc = nn.Sequential(
             nn.Linear(7000, 1000),
+            nn.LeakyReLU(0.2, inplace=True),
             nn.Linear(1000, 128)
         )
         
         self.deconv1 = nn.Sequential(
-            nn.ConvTranspose2d(128, 64, kernel_size=4, stride=2, padding=1)
+            nn.ConvTranspose2d(128, 64, kernel_size=4, stride=2, padding=1),
+            nn.LeakyReLU(0.2, inplace=True)
         )
         
         self.deconv2 = nn.Sequential(
             nn.ConvTranspose2d(64, 32, kernel_size=4, stride=2, padding=1),
-            nn.ReLU(inplace=True)
+            nn.LeakyReLU(0.2, inplace=True)
         )
         
         self.deconv3 = nn.Sequential(
             nn.ConvTranspose2d(32, 16, kernel_size=4, stride=2, padding=1),
-            nn.ReLU(inplace=True)
+            nn.LeakyReLU(0.2, inplace=True)
         )
         
         self.deconv4 = nn.Sequential(
             nn.ConvTranspose2d(16, 8, kernel_size=4, stride=2, padding=1),
-            nn.ReLU(inplace=True)
+            nn.LeakyReLU(0.2, inplace=True)
         )
 
         self.deconv5 = nn.Sequential(
@@ -77,9 +79,13 @@ class FeatureOpimizer(nn.Module):
 
         self.fc = nn.Sequential(
             nn.Linear(7000, 1000),
+            nn.LeakyReLU(0.2),
             nn.Linear(1000, 200),
+            nn.LeakyReLU(0.2),
             nn.Linear(200,1000),
-            nn.Linear(1000, 7000)
+            nn.LeakyReLU(0.2),
+            nn.Linear(1000, 7000),
+            nn.Sigmoid()
         )
 
     def forward(self, x):

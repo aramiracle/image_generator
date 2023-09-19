@@ -117,6 +117,7 @@ model_3 = models.regnet_y_1_6gf(weights='RegNet_Y_1_6GF_Weights.DEFAULT')
 model_4 = models.densenet121(weights='DenseNet121_Weights.DEFAULT')
 model_5 = models.mnasnet1_3(weights='MNASNet1_3_Weights.DEFAULT')
 model_6 = models.mobilenet_v3_large(weights='MobileNet_V3_Large_Weights.DEFAULT')
+model_7 = models.regnet_x_1_6gf(weights='RegNet_X_1_6GF_Weights.DEFAULT')
 
 # Training loop
 for epoch in range(epoch, epochs):
@@ -135,8 +136,9 @@ for epoch in range(epoch, epochs):
         f4 = model_4(real_images)
         f5 = model_5(real_images)
         f6 = model_6(real_images)
+        f7 = model_7(real_images)
 
-        features = torch.cat((f1, f2, f3, f4, f5, f6), dim=1)
+        features = torch.cat((f1, f2, f3, f4, f5, f6, f7), dim=1)
 
         # Train Discriminator
         optimizer_D.zero_grad()
