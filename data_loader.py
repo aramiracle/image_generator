@@ -39,7 +39,6 @@ class ImageDataset(Dataset):
             PIL.Image: Augmented input image.
             PIL.Image: Augmented output (target) image.
         """
-        input_image = self.transform(input_image)
 
         if self.train:
 
@@ -62,9 +61,9 @@ class ImageDataset(Dataset):
         """
         input_img_path = self.image_paths[idx]
 
-        input_image = Image.open(input_img_path).convert('RGB')
+        input_image = self.transform(Image.open(input_img_path).convert('RGB'))
 
-        input_image = self.apply_data_augmentation(input_image)
+        # input_image = self.apply_data_augmentation(input_image)
 
         return input_image
 

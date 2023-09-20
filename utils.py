@@ -2,6 +2,9 @@ import torch
 import math
 from torchmetrics.image import StructuralSimilarityIndexMeasure, PeakSignalNoiseRatio
 
+def normalize(x):
+    x = (x - torch.min(x)) / (torch.max(x) - torch.min(x))
+    return x
 
 def lnl1_metric(prediction, target):
     max = torch.maximum(prediction, target) + 1e-3 * torch.ones_like(prediction)

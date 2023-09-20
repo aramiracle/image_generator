@@ -12,6 +12,7 @@ from model import *
 from utils import *
 from data_loader import ImageDataset
 import torchvision.models as models
+import torch.nn.functional as F
 
 train_root_dir = 'data/resized'
 
@@ -71,21 +72,13 @@ else:
 
 
 # Calculate images feature with pretrained models
-model_1 = models.efficientnet_b2(weights='EfficientNet_B2_Weights.DEFAULT')
-model_2 = models.shufflenet_v2_x2_0(weights='ShuffleNet_V2_X2_0_Weights.DEFAULT')
-model_3 = models.regnet_y_1_6gf(weights='RegNet_Y_1_6GF_Weights.DEFAULT')
-model_4 = models.densenet121(weights='DenseNet121_Weights.DEFAULT')
-model_5 = models.mnasnet1_3(weights='MNASNet1_3_Weights.DEFAULT')
-model_6 = models.mobilenet_v3_large(weights='MobileNet_V3_Large_Weights.DEFAULT')
-model_7 = models.regnet_x_1_6gf(weights='RegNet_X_1_6GF_Weights.DEFAULT')
-
-model_1.eval()
-model_2.eval()
-model_3.eval()
-model_4.eval()
-model_5.eval()
-model_6.eval()
-model_7.eval()
+model_1 = models.efficientnet_b2(weights='EfficientNet_B2_Weights.DEFAULT').eval()
+model_2 = models.shufflenet_v2_x2_0(weights='ShuffleNet_V2_X2_0_Weights.DEFAULT').eval()
+model_3 = models.regnet_y_1_6gf(weights='RegNet_Y_1_6GF_Weights.DEFAULT').eval()
+model_4 = models.densenet121(weights='DenseNet121_Weights.DEFAULT').eval()
+model_5 = models.mnasnet1_3(weights='MNASNet1_3_Weights.DEFAULT').eval()
+model_6 = models.mobilenet_v3_large(weights='MobileNet_V3_Large_Weights.DEFAULT').eval()
+model_7 = models.regnet_x_1_6gf(weights='RegNet_X_1_6GF_Weights.DEFAULT').eval()
 
 best_ssim = 0
 
@@ -100,7 +93,7 @@ for epoch in range(epoch, epochs):
     for batch_idx, real_images in enumerate(tqdm(train_loader, desc=f"Epoch {epoch + 1}/{epochs}")):
 
         current_batch_size = real_images.shape[0]
-        
+
         f1 = model_1(real_images)
         f2 = model_2(real_images)
         f3 = model_3(real_images)
@@ -109,7 +102,7 @@ for epoch in range(epoch, epochs):
         f6 = model_6(real_images)
         f7 = model_7(real_images)
 
-        features = torch.cat((f1, f2, f3, f4, f5, f6, f7), dim=1)
+        features = F.sigmoid(torch.cat((f1, f2, f3, f4, f5, f6, f7), dim=1))
 
         # Generate fake images from the generator
         fake_images = generator(features)
@@ -136,7 +129,7 @@ for epoch in range(epoch, epochs):
         loss = PSNR_SSIM_LNL1_loss(fake_images, real_images)
         running_loss += loss
 
-        loss.backward()
+        loss.backward(retain_graph=True)
         optimizer_G.step()
         
     

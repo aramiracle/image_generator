@@ -11,6 +11,7 @@ from tqdm import tqdm
 from model import *
 from utils import *
 from data_loader import ImageDataset
+import torch.nn.functional as F
 
 
 train_root_dir = 'data/resized'
@@ -123,13 +124,13 @@ for epoch in range(epoch, epochs):
 
         current_batch_size = real_images.shape[0]
         
-        f1 = model_1(real_images)
-        f2 = model_2(real_images)
-        f3 = model_3(real_images)
-        f4 = model_4(real_images)
-        f5 = model_5(real_images)
-        f6 = model_6(real_images)
-        f7 = model_7(real_images)
+        f1 = normalize(model_1(real_images))
+        f2 = normalize(model_2(real_images))
+        f3 = normalize(model_3(real_images))
+        f4 = normalize(model_4(real_images))
+        f5 = normalize(model_5(real_images))
+        f6 = normalize(model_6(real_images))
+        f7 = normalize(model_7(real_images))
 
         features = torch.cat((f1, f2, f3, f4, f5, f6, f7), dim=1)
 
@@ -166,7 +167,7 @@ for epoch in range(epoch, epochs):
         loss_discriminator = loss_real + loss_fake
         running_loss_discrimonator += loss_discriminator
 
-        loss_discriminator.backward(retain_graph=True)
+        loss_discriminator.backward()
         optimizer_D.step()
         
         # Train Generator

@@ -16,6 +16,7 @@ from tqdm import tqdm
 from utils import *
 from data_loader import ImageDataset
 import torchvision.models as models
+import torch.nn.functional as F
 
 
 train_root_dir = 'data/resized'
@@ -24,21 +25,16 @@ transform = transforms.Compose([transforms.ToTensor()])
 
 image_names = os.listdir(train_root_dir)
 
-model_1 = models.efficientnet_b2(weights='EfficientNet_B2_Weights.DEFAULT')
-model_2 = models.shufflenet_v2_x2_0(weights='ShuffleNet_V2_X2_0_Weights.DEFAULT')
-model_3 = models.regnet_y_1_6gf(weights='RegNet_Y_1_6GF_Weights.DEFAULT')
-model_4 = models.densenet121(weights='DenseNet121_Weights.DEFAULT')
-model_5 = models.mnasnet1_3(weights='MNASNet1_3_Weights.DEFAULT')
-model_6 = models.mobilenet_v3_large(weights='MobileNet_V3_Large_Weights.DEFAULT')
-model_7 = models.regnet_x_1_6gf(weights='RegNet_X_1_6GF_Weights.DEFAULT')
+# Calculate images feature with pretrained models
+model_1 = models.efficientnet_b2(weights='EfficientNet_B2_Weights.DEFAULT').eval()
+model_2 = models.shufflenet_v2_x2_0(weights='ShuffleNet_V2_X2_0_Weights.DEFAULT').eval()
+model_3 = models.regnet_y_1_6gf(weights='RegNet_Y_1_6GF_Weights.DEFAULT').eval()
+model_4 = models.densenet121(weights='DenseNet121_Weights.DEFAULT').eval()
+model_5 = models.mnasnet1_3(weights='MNASNet1_3_Weights.DEFAULT').eval()
+model_6 = models.mobilenet_v3_large(weights='MobileNet_V3_Large_Weights.DEFAULT').eval()
+model_7 = models.regnet_x_1_6gf(weights='RegNet_X_1_6GF_Weights.DEFAULT').eval()
 
-model_1.eval()
-model_2.eval()
-model_3.eval()
-model_4.eval()
-model_5.eval()
-model_6.eval()
-model_7.eval()
+print('Starting calculating features and transform it.')
 
 features_list = []
 for image_name in tqdm(image_names):
@@ -58,9 +54,10 @@ for image_name in tqdm(image_names):
 
 print('Features calculated.')
 
-features_array = torch.cat(features_list, dim=0).detach().numpy()
+features_arr = torch.cat(features_list, dim=0).detach().numpy()
 pca = PCA(n_components=96)
-X_pca = pca.fit_transform(features_array)
+X_pca = torch.tensor(pca.fit_transform(features_arr))
+X_pca_normalized = normalize(X_pca)
 
 #Training
 
@@ -84,7 +81,7 @@ os.makedirs(checkpoint_dir, exist_ok=True)
 ssim_metric = StructuralSimilarityIndexMeasure(data_range=1)
 psnr_metric = PeakSignalNoiseRatio()
 
-generator = PretrainGenerator()
+generator = PCAGenerator()
 discriminator = Discriminator()
 criterion = nn.BCELoss()
 optimizer_G = optim.Adam(generator.parameters(), lr=learning_rate)
@@ -92,7 +89,7 @@ optimizer_D = optim.Adam(discriminator.parameters(), lr=learning_rate)
 
 transform = transforms.Compose([transforms.ToTensor()])
 train_dataset = ImageDataset(train_root_dir, transform=transform, train=True)
-train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
+train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=False)
 
 
 generated_images_dir = 'generated_images'
@@ -140,15 +137,6 @@ else:
     print("PCA - No checkpoint found. Starting training from epoch 1...")
 
 
-# Calculate images feature with pretrained models
-model_1.train()
-model_2.train()
-model_3.train()
-model_4.train()
-model_5.train()
-model_6.train()
-model_7.train()
-
 best_ssim = 0
 
 # Training loop phase I
@@ -163,15 +151,7 @@ for epoch in range(epoch, epochs):
 
         current_batch_size = real_images.shape[0]
         
-        f1 = model_1(real_images)
-        f2 = model_2(real_images)
-        f3 = model_3(real_images)
-        f4 = model_4(real_images)
-        f5 = model_5(real_images)
-        f6 = model_6(real_images)
-        f7 = model_7(real_images)
-
-        features = torch.cat((f1, f2, f3, f4, f5, f6, f7), dim=1)
+        features = X_pca_normalized[batch_idx*batch_size:batch_idx*batch_size + current_batch_size]
 
         # Generate fake images from the generator
         fake_images = generator(features)
