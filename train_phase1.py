@@ -12,6 +12,7 @@ from tqdm import tqdm
 from model import *
 from utils import *
 from data_loader import ImageDataset
+import torchvision.models as models
 
 train_root_dir = 'data/resized'
 

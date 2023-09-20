@@ -52,7 +52,7 @@ X_pca = pca.fit_transform(features_array)
 print('Features transformed')
 
 plt.figure(figsize=(8, 6))
-plt.scatter(X_pca[:, 0], X_pca[:, 1], alpha=0.5)
+plt.scatter(X_pca[:, 0], X_pca[:, 1])
 plt.xlabel('Principal Component 1')
 plt.ylabel('Principal Component 2')
 plt.title('PCA 2D Projection')
