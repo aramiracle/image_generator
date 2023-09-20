@@ -18,7 +18,7 @@ train_root_dir = 'data/resized'
 # Define hyperparameters
 batch_size = 64
 learning_rate = 3e-3
-epochs = 100
+epochs = 300
 
 generator = PretrainGenerator()
 criterion = nn.BCELoss()
@@ -87,7 +87,6 @@ model_5.eval()
 model_6.eval()
 model_7.eval()
 
-epochs = 204
 best_ssim = 0
 
 # Training loop phase I
