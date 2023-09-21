@@ -6,7 +6,7 @@ from torchvision import transforms
 import torch.optim as optim
 
 
-generator = PretrainGenerator()
+generator = PCAGenerator()
 model = FeatureOpimizer()
 
 optimizer = optim.Adam(model.parameters(), lr=0.001)
@@ -15,7 +15,9 @@ optimizer = optim.Adam(model.parameters(), lr=0.001)
 gan_images_dir = 'results/gan'
 os.makedirs(gan_images_dir, exist_ok=True)
 
-best_checkpoint_path = 'saved_models/phase2/best_gan_checkpoint.pth'
+model_dir = 'saved_models/pca'
+
+best_checkpoint_path = f'{model_dir}/best_gan_checkpoint.pth'
 checkpoint = torch.load(best_checkpoint_path)
 generator.load_state_dict(checkpoint['generator_state_dict'])
 
@@ -30,11 +32,10 @@ for i in range(generated_images_num):
         model.train()
         optimizer.zero_grad()
 
-        random_feature = torch.rand(10).unsqueeze(0)
+        random_feature = torch.rand(3).unsqueeze(0)
         generated_feature = model(random_feature)
         generated_image_tensor = generator(generated_feature)
         loss = brisque(generated_image_tensor)
-        loss += torch.std(generated_image_tensor)
         if loss < best_loss:
             best_generated_image = generated_image_tensor
             best_loss = loss

@@ -4,6 +4,7 @@ from torchvision.transforms import transforms
 from sklearn.decomposition import PCA
 import torchvision.models as models
 from PIL import Image
+from tqdm import tqdm
 from torchvision.utils import save_image
 from model import *
 import re
@@ -15,6 +16,8 @@ from tqdm import tqdm
 from utils import *
 from data_loader import ImageDataset
 import torchvision.models as models
+import torch.nn.functional as F
+
 
 train_root_dir = 'data/resized'
 
@@ -61,7 +64,7 @@ else:
     print('Features calculated.')
 
     features_arr = torch.cat(features_list, dim=0).detach().numpy()
-    pca = PCA(n_components=256)
+    pca = PCA(n_components=192)
     X_pca = torch.tensor(pca.fit_transform(features_arr))
     X_pca_normalized = normalize(X_pca)
     print(f'Explained variance: {pca.explained_variance_ratio_.sum()}')
@@ -73,12 +76,14 @@ else:
 
 # Define hyperparameters
 batch_size = 64
-learning_rate = 1e-3
-epochs = 10000
+learning_rate = 1e-4
+epochs = 1000
 
 generator = PCAGenerator()
+discriminator = Discriminator()
 criterion = nn.BCELoss()
 optimizer_G = optim.Adam(generator.parameters(), lr=learning_rate)
+optimizer_D = optim.Adam(discriminator.parameters(), lr=learning_rate)
 
 transform = transforms.Compose([transforms.ToTensor()])
 train_dataset = ImageDataset(train_root_dir, transform=transform, train=True)
@@ -90,7 +95,7 @@ shutil.rmtree(generated_images_dir, ignore_errors=True)
 os.makedirs(generated_images_dir, exist_ok=True)
 
 # Define the path to the checkpoint directory
-checkpoint_dir = 'saved_models/pca/'
+checkpoint_dir = 'saved_models/pca_gan/'
 os.makedirs(checkpoint_dir, exist_ok=True)
 
 ssim_metric = StructuralSimilarityIndexMeasure(data_range=1)
@@ -115,15 +120,18 @@ if checkpoint_files:
     checkpoint = torch.load(checkpoint_path)
     epoch = checkpoint['epoch']
     generator.load_state_dict(checkpoint['generator_state_dict'])
+    discriminator.load_state_dict(checkpoint['discriminator_state_dict'])
     optimizer_G.load_state_dict(checkpoint['optimizer_G_state_dict'])
+    optimizer_D.load_state_dict(checkpoint['optimizer_D_state_dict'])
 
     # Make sure to set the mode for generator and discriminator
     generator.train()
+    discriminator.train()
 
-    print(f"PCA - Loaded checkpoint from epoch {epoch}. Resuming training...")
+    print(f"PCA_GAN - Loaded checkpoint from epoch {epoch}. Resuming training...")
 else:
     epoch = 0
-    print("PCA - No checkpoint found. Starting training from epoch 1...")
+    print("PCA_GAN - No checkpoint found. Starting training from epoch 1...")
 
 
 best_ssim = 0
@@ -133,7 +141,8 @@ for epoch in range(epoch, epochs):
     running_psnr = 0.0
     running_ssim = 0.0
     running_lnl1 = 0.0
-    running_loss = 0.0
+    running_loss_generator = 0.0
+    running_loss_discriminator = 0.0
 
     # Wrap train_loader with tqdm for progress bar
     for batch_idx, real_images in enumerate(tqdm(train_loader, desc=f"Epoch {epoch + 1}/{epochs}")):
@@ -142,6 +151,9 @@ for epoch in range(epoch, epochs):
         
         features = X_pca_normalized[batch_idx*batch_size:batch_idx*batch_size + current_batch_size]
 
+        # Train Discriminator
+        optimizer_D.zero_grad()
+ 
         # Generate fake images from the generator
         fake_images = generator(features)
         if not((batch_idx + 1)%4):
@@ -159,25 +171,47 @@ for epoch in range(epoch, epochs):
         lnl1_value = lnl1_metric(fake_images, real_images)
         running_lnl1 += lnl1_value
 
+        # Calculate the loss for real and fake images
+        real_labels = torch.ones(current_batch_size, 1)
+        fake_labels = torch.zeros(current_batch_size, 1)
+        
+        output_real = discriminator(real_images)
+        loss_real = criterion(output_real, real_labels)
+        
+        output_fake = discriminator(fake_images)
+        loss_fake = criterion(output_fake, fake_labels)
+        
+        loss_discriminator = loss_real + loss_fake
+        running_loss_discriminator += loss_discriminator
+
+        loss_discriminator.backward(retain_graph=True)
+        optimizer_D.step()
         
         # Train Generator
         optimizer_G.zero_grad()
         
+        output_fake = discriminator(fake_images)
+        bce_loss = criterion(output_fake, real_labels)  # BCELoss for generator
+        
         # Calculating custom loss
-        loss = PSNR_SSIM_LNL1_loss(fake_images, real_images)
-        running_loss += loss
-
-        loss.backward()
+        custom_loss = PSNR_SSIM_LNL1_loss(fake_images, real_images)
+        
+        # Combine BCELoss and CustomLoss for the generator
+        loss_generator = bce_loss + custom_loss
+        running_loss_generator += loss_generator
+        
+        loss_generator.backward(retain_graph=True)
         optimizer_G.step()
         
     
     average_psnr = running_psnr / len(train_loader)
     average_ssim = running_ssim / len(train_loader)
     average_lnl1 = running_lnl1 / len(train_loader)
-    average_loss = running_loss / len(train_loader)
+    average_loss_discriminator = running_loss_discriminator / len(train_loader)
+    average_loss_generator = running_loss_generator / len(train_loader)
 
-    print(f"PCA - Epoch [{epoch + 1}/{epochs}] Loss G: {average_loss:.4f}")
-    print(f'PCA - Epoch [{epoch + 1}/{epochs}] Metrics: PSNR: {average_psnr:.4f} SSIM: {average_ssim:.4f} LNL1: {average_lnl1:.4f}')
+    print(f"PCA_GAN - Epoch [{epoch + 1}/{epochs}] Loss D: {average_loss_discriminator:.4f} Loss G: {average_loss_generator:.4f}")
+    print(f'PCA_GAN - Epoch [{epoch + 1}/{epochs}] Metrics: PSNR: {average_psnr:.4f} SSIM: {average_ssim:.4f} LNL1: {average_lnl1:.4f}')
 
     # Check the condition and save models if met
     if not((epoch + 1) % 5):
@@ -185,15 +219,17 @@ for epoch in range(epoch, epochs):
         torch.save({
             'epoch': epoch + 1,
             'generator_state_dict': generator.state_dict(),
-            'optimizer_G_state_dict': optimizer_G.state_dict()
+            'discriminator_state_dict': discriminator.state_dict(),
+            'optimizer_G_state_dict': optimizer_G.state_dict(),
+            'optimizer_D_state_dict': optimizer_D.state_dict(),
         }, save_path)
-        print('PCA - Model is saved.')
+        print('PCA_GAN - Model is saved.')
 
     if best_ssim < average_ssim:
         best_ssim = average_ssim
         save_path = f'{checkpoint_dir}/best_gan_checkpoint.pth'
         torch.save({
-            'generator_state_dict': generator.state_dict()
+            'generator_state_dict': generator.state_dict(),
         }, save_path)
         print('$$$ Best model is saved according to SSIM. $$$')
 

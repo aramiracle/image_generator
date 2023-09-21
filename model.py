@@ -1,5 +1,5 @@
+import torch
 import torch.nn as nn
-import torchvision.models as models
 
 
 # Define the Generator network
@@ -14,32 +14,18 @@ class PretrainGenerator(nn.Module):
             nn.Linear(1000, 128)
         )
         
-        self.deconv1 = nn.Sequential(
-            nn.ConvTranspose2d(128, 64, kernel_size=4, stride=2, padding=1),
-            nn.LeakyReLU(0.2, inplace=True)
-        )
-        
-        self.deconv2 = nn.Sequential(
-            nn.ConvTranspose2d(64, 32, kernel_size=4, stride=2, padding=1),
-            nn.LeakyReLU(0.2, inplace=True)
-        )
-        
-        self.deconv3 = nn.Sequential(
-            nn.ConvTranspose2d(32, 16, kernel_size=4, stride=2, padding=1),
-            nn.LeakyReLU(0.2, inplace=True)
-        )
-        
-        self.deconv4 = nn.Sequential(
-            nn.ConvTranspose2d(16, 8, kernel_size=4, stride=2, padding=1),
-            nn.LeakyReLU(0.2, inplace=True)
-        )
+        self.deconv1 = self.deconv_block(128, 64)
+        self.deconv2 = self.deconv_block(64, 32)
+        self.deconv3 = self.deconv_block(32, 16)
+        self.deconv4 = self.deconv_block(16, 8)
+        self.deconv5 = self.deconv_block(8, 3)
 
-        self.deconv5 = nn.Sequential(
-            nn.ConvTranspose2d(8, 3, kernel_size=4, stride=2, padding=1),
-            nn.ReLU(inplace=True)
+    def deconv_block(self, in_channel, out_channel):
+        return nn.Sequential(
+            nn.ConvTranspose2d(in_channel, out_channel, kernel_size=4, stride=2, padding=1),
+            nn.LeakyReLU(0.2, inplace=True)
         )
-
-        
+    
     def forward(self, x):
         x0 = self.fc(x).unsqueeze(2).unsqueeze(3) #128x1x1
         x1 = self.deconv1(x0) #64x2x2
@@ -57,27 +43,27 @@ class PCAGenerator(nn.Module):
         
         # Define additional layers for upsampling to reach 50x50 resolution
 
-        self.deconv1 = self.deconv_block(96, 48)
-        self.deconv2 = self.deconv_block(48, 24)
-        self.deconv3 = self.deconv_block(24, 12)
-        self.deconv4 = self.deconv_block(12, 6)
-        self.deconv5 = self.deconv_block(6, 3)
+        self.deconv1 = self.deconv_block(256, 128)
+        self.deconv2 = self.deconv_block(128, 64)
+        self.deconv3 = self.deconv_block(64, 32)
+        self.deconv4 = self.deconv_block(32, 16)
+        self.deconv5 = self.deconv_block(16, 3)
         
         
     def deconv_block(self, in_channel, out_channel):
-        nn.Sequential(
+        return nn.Sequential(
             nn.ConvTranspose2d(in_channel, out_channel, kernel_size=4, stride=2, padding=1),
             nn.LeakyReLU(0.2, inplace=True)
         )
         
     def forward(self, x):
-        x0 = x.unsqueeze(2).unsqueeze(3) #96x1x1
-        x1 = self.deconv1(x0) #48x2x2
-        x2 = self.deconv2(x1) #24x4x4
-        x3 = self.deconv3(x2) #12x8x8
-        x4 = self.deconv4(x3) #6x16x16
+        x0 = x.unsqueeze(2).unsqueeze(3) #256x1x1
+        x1 = self.deconv1(x0) #128x2x2
+        x2 = self.deconv2(x1) #64x4x4
+        x3 = self.deconv3(x2) #32x8x8
+        x4 = self.deconv4(x3) #16x16x16
         x5 = self.deconv5(x4) #3x32x32
-        output = nn.Sigmoid(x5)
+        output = torch.sigmoid(x5)
 
         return output
 
@@ -110,11 +96,11 @@ class FeatureOpimizer(nn.Module):
         super(FeatureOpimizer, self).__init__()
 
         self.fc = nn.Sequential(
+            nn.Linear(3, 10),
+            nn.LeakyReLU(0.2),
             nn.Linear(10, 100),
             nn.LeakyReLU(0.2),
-            nn.Linear(100, 1000),
-            nn.LeakyReLU(0.2),
-            nn.Linear(1000,7000),
+            nn.Linear(100,192),
             nn.Sigmoid()
         )
 
