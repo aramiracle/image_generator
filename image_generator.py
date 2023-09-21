@@ -21,7 +21,7 @@ best_checkpoint_path = f'{model_dir}/best_gan_checkpoint.pth'
 checkpoint = torch.load(best_checkpoint_path)
 generator.load_state_dict(checkpoint['generator_state_dict'])
 
-generated_images_num = 100
+generated_images_num = 10
 num_epochs = 300
 
 generator.eval()
@@ -32,7 +32,7 @@ for i in range(generated_images_num):
         model.train()
         optimizer.zero_grad()
 
-        random_feature = torch.rand(3).unsqueeze(0)
+        random_feature = torch.rand(10).unsqueeze(0)
         generated_feature = model(random_feature)
         generated_image_tensor = generator(generated_feature)
         loss = brisque(generated_image_tensor)

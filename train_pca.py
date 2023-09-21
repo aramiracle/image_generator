@@ -74,7 +74,7 @@ else:
 # Define hyperparameters
 batch_size = 64
 learning_rate = 1e-3
-epochs = 10000
+epochs = 5000
 
 generator = PCAGenerator()
 criterion = nn.BCELoss()

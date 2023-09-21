@@ -96,11 +96,11 @@ class FeatureOpimizer(nn.Module):
         super(FeatureOpimizer, self).__init__()
 
         self.fc = nn.Sequential(
-            nn.Linear(3, 10),
+            nn.Linear(10, 64),
             nn.LeakyReLU(0.2),
-            nn.Linear(10, 100),
+            nn.Linear(64, 128),
             nn.LeakyReLU(0.2),
-            nn.Linear(100,192),
+            nn.Linear(128,256),
             nn.Sigmoid()
         )
 
