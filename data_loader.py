@@ -2,7 +2,6 @@ from torch.utils.data import DataLoader, Dataset
 from torchvision import transforms
 from PIL import Image
 import os
-import torch
 
 # Define a custom dataset class for image enhancement tasks.
 class ImageDataset(Dataset):
