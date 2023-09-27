@@ -188,7 +188,7 @@ def calculate_embeddings(train_loader, test_loader, features_dir):
             mean_list.append(mean)
             std_list.append(std)
         
-        pca = PCA(n_components=256)  # Create a PCA object with 256 components
+        pca = PCA(n_components=320)  # Create a PCA object with 256 components
         X_pca_train = torch.tensor(pca.fit_transform(train_features))  # Fit and transform PCA on training features
         print(f'Explained variance: {pca.explained_variance_ratio_.sum()}')
         
@@ -216,15 +216,15 @@ def calculate_embeddings(train_loader, test_loader, features_dir):
 def calculate_features(loader):
 
     # Create instances of various pretrained models for feature extraction
-    model_1 = models.efficientnet_b2(weights='EfficientNet_B2_Weights.DEFAULT').eval()
+    model_1 = models.efficientnet_v2_s(weights='EfficientNet_V2_S_Weights.DEFAULT').eval()
     model_2 = models.shufflenet_v2_x2_0(weights='ShuffleNet_V2_X2_0_Weights.DEFAULT').eval()
-    model_3 = models.regnet_y_1_6gf(weights='RegNet_Y_1_6GF_Weights.DEFAULT').eval()
-    model_4 = models.densenet121(weights='DenseNet121_Weights.DEFAULT').eval()
+    model_3 = models.regnet_y_3_2gf(weights='RegNet_Y_3_2GF_Weights.DEFAULT').eval()
+    model_4 = models.densenet201(weights='DenseNet201_Weights.DEFAULT').eval()
     model_5 = models.mnasnet1_3(weights='MNASNet1_3_Weights.DEFAULT').eval()
     model_6 = models.mobilenet_v3_large(weights='MobileNet_V3_Large_Weights.DEFAULT').eval()
-    model_7 = models.regnet_x_1_6gf(weights='RegNet_X_1_6GF_Weights.DEFAULT').eval()
-    model_8 = models.resnet50(weights='ResNet50_Weights.DEFAULT').eval()
-    model_9 = models.swin_v2_t(weights='Swin_V2_T_Weights.DEFAULT').eval()
+    model_7 = models.regnet_x_3_2gf(weights='RegNet_X_3_2GF_Weights.DEFAULT').eval()
+    model_8 = models.swin_v2_t(weights='Swin_V2_T_Weights.DEFAULT').eval()
+    model_9 = models.convnext_tiny(weights='ConvNeXt_Tiny_Weights.DEFAULT').eval()
 
     features_list = []
     for images in tqdm(loader):
