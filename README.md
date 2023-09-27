@@ -74,3 +74,4 @@ This project assumes access to a dataset of images organized as specified above.
 
 Feel free to explore and modify the scripts to suit your particular image enhancement or generation tasks.
 
+Although the results are not very good but it was entertaining try to generate image from features extracted from pretrained models.
