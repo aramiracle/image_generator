@@ -66,7 +66,7 @@ To effectively use this project, follow these steps:
    - Train the PCA-based image generator.
    - Generate enhanced images using the trained model and save them in the `results/cnn` directory.
 
-5. Examine the generated images in the `results/gan` directory for image quality assessment or further analysis.
+5. Examine the generated images in the `results/cnn` directory for image quality assessment or further analysis.
 
 ## Note
 
