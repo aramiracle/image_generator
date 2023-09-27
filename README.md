@@ -72,6 +72,4 @@ To effectively use this project, follow these steps:
 
 This project assumes access to a dataset of images organized as specified above. It's essential to adjust the training parameters, model architecture, and preprocessing steps to align with your specific image processing and generation needs.
 
-Feel free to explore and modify the scripts to suit your particular image enhancement or generation tasks.
-
 Although the results are not very good but it was entertaining try to generate image from features extracted from pretrained models.
