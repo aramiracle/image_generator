@@ -5,6 +5,9 @@ Trying to generate images with features adpoted from pretrained models
 
 This project comprises a collection of Python scripts for image preprocessing, PCA-based image generation, and image quality evaluation. The primary objective is to transform input images into PCA space, train a generator model to produce enhanced images, and assess the quality of the generated images. Below, we provide an in-depth overview of each script and its functionalities:
 
+## Dataset
+The project uses the [DIV2K dataset](https://data.vision.ee.ethz.ch/cvl/DIV2K/) from ETH Zurich. The DIV2K dataset is a high-quality dataset of images, which serves as the input data for the image preprocessing and enhancement tasks. You can access the dataset through the provided link.
+
 ## preprocess.py
 
 This script manages the preprocessing of input images. Key functionalities include:
