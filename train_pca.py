@@ -11,7 +11,7 @@ if __name__ == "__main__":
     # Training parameters
     batch_size = 64
     learning_rate = 1e-2
-    epochs = 5000
+    epochs = 12000
 
     # Load data
     train_loader, test_loader = loading_images(root_dir, batch_size)

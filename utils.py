@@ -223,8 +223,8 @@ def calculate_features(loader):
     model_5 = models.mnasnet1_3(weights='MNASNet1_3_Weights.DEFAULT').eval()
     model_6 = models.mobilenet_v3_large(weights='MobileNet_V3_Large_Weights.DEFAULT').eval()
     model_7 = models.regnet_x_1_6gf(weights='RegNet_X_1_6GF_Weights.DEFAULT').eval()
-    model_8 = models.resnet50(weights='ResNet50_Weights.DEFAULT')
-    model_9 = models.swin_v2_t(weights='Swin_V2_T_Weights.DEFAULT')
+    model_8 = models.resnet50(weights='ResNet50_Weights.DEFAULT').eval()
+    model_9 = models.swin_v2_t(weights='Swin_V2_T_Weights.DEFAULT').eval()
 
     features_list = []
     for images in tqdm(loader):
